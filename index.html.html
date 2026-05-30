@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phyto Flashcards</title>
+<style>
+body{margin:0;font-family:system-ui,sans-serif;background:#e5eefb;color:#0f172a}.wrap{max-width:900px;margin:0 auto;padding:16px}h1{margin:8px 0 4px}.card{background:#fff;border-radius:22px;padding:24px;box-shadow:0 14px 30px rgba(0,0,0,.12);min-height:360px;display:flex;flex-direction:column;justify-content:space-between}.term{font-size:34px;font-weight:800}.content{white-space:pre-wrap;font-size:20px;line-height:1.5}.controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.controls button,.controls a{border:0;border-radius:999px;padding:11px 16px;font-weight:700;text-decoration:none}.primary{background:#22c55e;color:#fff}.secondary{background:#fff;color:#0f172a;border:1px solid #cbd5e1}.list{margin-top:16px;background:#fff;border-radius:18px;padding:16px}.item{padding:10px 0;border-top:1px solid #e2e8f0}.item:first-child{border-top:0}.small{color:#64748b;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Phyto Flashcards</h1>
+<div class="small">Tap Next / Previous, or tap the card to flip.</div>
+<div class="controls"><button class="primary" id="prev">Previous</button><button class="primary" id="flip">Flip</button><button class="primary" id="next">Next</button><a class="secondary" href="#list">Deck list</a></div>
+<div class="card" id="card"><div><div class="small">Front</div><div class="term" id="front"></div></div><div><div class="small">Back</div><div class="content" id="back"></div></div></div>
+<div class="list" id="list"><b>Deck</b><div id="deck"></div></div>
+</div>
+<script>
+const cards=[
+['Bran','Trade: Bran
+Scientific: Wheat bran
+Use: constipation
+Key point: take with plenty of water'],
+['Psyllogel','Trade: Psyllogel
+Scientific: Psyllium husk
+Use: IBS / constipation support
+Key point: mix with water'],
+['Biocolin','Trade: Biocolin
+Use: IBS / bloating (unclear)
+Key point: follow course notes'],
+['Neocarbon','Trade: Neocarbon
+Scientific: Activated charcoal
+Use: IBS / gas
+Key point: may cause GI upset'],
+['Chimi Calm','Trade: Chimi Calm
+Use: gas relief
+Key point: avoid if allergic to ingredients'],
+['Ashwagandha','Use: stress support
+Scientific: Withania somnifera
+Key point: avoid in pregnancy'],
+['Neovita','Scientific: Panax ginseng
+Use: cognitive enhancement
+Key point: may cause mild side effects'],
+['Helvafew','Scientific: Feverfew
+Use: migraine prevention
+Key point: avoid in pregnancy'],
+['Sun Ginkgo','Scientific: Ginkgo
+Use: memory / mental performance
+Key point: may affect blood sugar'],
+['Valerian','Scientific: Valeriana officinalis
+Use: sleep disorders
+Key point: can cause drowsiness'],
+['Vitex Berry','Scientific: Chasteberry
+Use: PMS
+Key point: may take weeks to work'],
+['Evening Primrose','Scientific: Evening primrose
+Use: PMS symptoms
+Key point: avoid before surgery'],
+['Libifem','Use: vaginal dryness
+Key point: external use only'],
+['Menoflavon','Scientific: Red clover
+Use: menopause
+Key point: isoflavones'],
+['Mastrelle Meno','Scientific: Black cohosh
+Use: menopause symptoms
+Key point: may need several weeks'],
+['Cranberry Complex','Use: UTI prevention
+Key point: increase water intake'],
+['Saw Palmetto','Use: BPH
+Key point: may take weeks for benefit'],
+['Prostamin','Use: BPH
+Key point: consult if urinary symptoms worsen'],
+['Bioprost','Use: BPH
+Key point: monitor urinary symptoms'],
+['Inorin','Use: UTI prevention
+Key point: dissolve in water'],
+['Helix','Scientific: Hedera helix
+Use: productive cough
+Key point: usually syrup'],
+['Bronchicum Elixir','Scientific: Thymus vulgaris
+Use: acute bronchitis
+Key point: avoid if allergic to thyme'],
+['Pana Natural','Scientific: Althaea officinalis
+Use: productive cough
+Key point: shake before use'],
+['Pelargos','Scientific: Pelargonium sidoides
+Use: acute bronchitis
+Key point: shake well before use'],
+['Gold Thyme','Scientific: Thymus vulgaris
+Use: productive cough
+Key point: avoid if allergic to thyme'],
+['Carb-X','Scientific: White kidney bean extract
+Use: weight loss
+Key point: take before carb-rich meals'],
+['Green Coffee','Scientific: Green coffee bean
+Use: weight management
+Key point: may increase caffeine effects'],
+['GinTura Slim','Ingredients: ginger + turmeric + cinnamon
+Use: weight loss support
+Key point: avoid with anticoagulants'],
+['Apple Cider Vinegar','Use: weight loss support
+Key point: avoid overuse; may irritate stomach'],
+['Garcinia Cambogia','Use: weight loss support
+Key point: stop if jaundice occurs']
+];
+let i=0, flip=false;
+const front=document.getElementById('front'),back=document.getElementById('back'),deck=document.getElementById('deck'),card=document.getElementById('card');
+function render(){front.textContent=cards[i][0];back.textContent=cards[i][1];deck.innerHTML=cards.map((c,n)=>`<div class='item'><b>${n+1}. ${c[0]}</b><div class='small'>${c[1].replace(/
+/g,' • ')}</div></div>`).join('');card.style.transform=flip?'rotateY(180deg)':'none';}
+document.getElementById('flip').onclick=()=>{flip=!flip;render()};document.getElementById('next').onclick=()=>{i=(i+1)%cards.length;flip=false;render()};document.getElementById('prev').onclick=()=>{i=(i-1+cards.length)%cards.length;flip=false;render()};card.onclick=()=>{flip=!flip;render()};render();
+</script></body></html>
