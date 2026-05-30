@@ -1,0 +1,147 @@
+from pathlib import Path
+html = '''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phyto Flashcards</title>
+<style>
+  :root{--bg:#0f172a;--card:#ffffff;--accent:#22c55e;--muted:#64748b}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#e2e8f0,#cbd5e1);color:#0f172a}
+  .wrap{max-width:980px;margin:0 auto;padding:18px}
+  h1{margin:6px 0 10px;font-size:28px}
+  .top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .meta{color:var(--muted);font-size:14px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 18px}
+  button,a.btn{border:0;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+  button.primary{background:var(--accent);color:#082f15}
+  button.secondary,a.btn{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+  .card{perspective:1200px;max-width:860px;margin:18px auto}
+  .inner{position:relative;min-height:420px;transform-style:preserve-3d;transition:transform .5s}
+  .flipped .inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:28px;background:var(--card);box-shadow:0 18px 50px rgba(15,23,42,.18);padding:28px;display:flex;flex-direction:column;justify-content:space-between}
+  .back{transform:rotateY(180deg)}
+  .label{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}
+  .term{font-size:34px;line-height:1.15;font-weight:900;margin:10px 0 12px}
+  .content{font-size:20px;line-height:1.55;white-space:pre-wrap}
+  .footer{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;gap:10px;flex-wrap:wrap}
+  .progress{height:10px;background:#fff;border-radius:999px;overflow:hidden;border:1px solid #cbd5e1;margin-top:8px}
+  .bar{height:100%;width:0;background:linear-gradient(90deg,#22c55e,#16a34a)}
+  .small{font-size:13px;color:var(--muted)}
+  .list{max-width:860px;margin:18px auto 0;background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 10px 30px rgba(15,23,42,.08)}
+  .list h2{margin:0 0 10px;font-size:18px}
+  .item{padding:10px 0;border-top:1px solid #e2e8f0}
+  .item:first-child{border-top:0}
+  .item b{display:block}
+  input[type=range]{width:180px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Phyto Flashcards</h1>
+      <div class="meta">Tap the card to flip • Swipe or use the buttons to move through the deck</div>
+    </div>
+    <div class="small">Made for fast memorization</div>
+  </div>
+
+  <div class="controls">
+    <button class="primary" id="prev">← Previous</button>
+    <button class="primary" id="flip">Flip card</button>
+    <button class="primary" id="next">Next →</button>
+    <a class="btn secondary" href="#deck">Jump to list</a>
+    <label class="small">Text size <input id="fontSize" type="range" min="16" max="28" value="20"></label>
+  </div>
+
+  <div class="progress"><div class="bar" id="bar"></div></div>
+
+  <div class="card" id="card">
+    <div class="inner">
+      <div class="face front">
+        <div>
+          <div class="label">Front</div>
+          <div class="term" id="frontTerm"></div>
+          <div class="small">Question side</div>
+        </div>
+        <div class="footer"><span id="count1"></span><span>Tap to reveal the back</span></div>
+      </div>
+      <div class="face back">
+        <div>
+          <div class="label">Back</div>
+          <div class="content" id="backText"></div>
+        </div>
+        <div class="footer"><span id="count2"></span><span>Study the key points</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="list" id="deck">
+    <h2>Deck order</h2>
+    <div id="deckList"></div>
+  </div>
+</div>
+<script>
+const cards = [
+  {term:'Bran', back:'Trade: Bran\nScientific: Wheat bran\nUse: constipation\nKey point: take with plenty of water'},
+  {term:'Psyllogel', back:'Trade: Psyllogel\nScientific: Psyllium husk\nUse: IBS / constipation support\nKey point: mix with water'},
+  {term:'Biocolin', back:'Trade: Biocolin\nUse: IBS / bloating (handwritten note unclear)\nKey point: follow course notes'},
+  {term:'Neocarbon', back:'Trade: Neocarbon\nScientific: Activated charcoal\nUse: IBS / gas\nKey point: may cause GI upset'},
+  {term:'Chimi Calm', back:'Trade: Chimi Calm\nUse: gas relief\nKey point: avoid if allergic to ingredients'},
+  {term:'Ashwagandha', back:'Use: stress support\nScientific: Withania somnifera\nKey point: avoid in pregnancy'},
+  {term:'Neovita', back:'Scientific: Panax ginseng\nUse: cognitive enhancement\nKey point: may cause mild side effects'},
+  {term:'Helvafew', back:'Scientific: Feverfew\nUse: migraine prevention\nKey point: avoid in pregnancy'},
+  {term:'Sun Ginkgo', back:'Scientific: Ginkgo\nUse: memory / mental performance\nKey point: may affect blood sugar'},
+  {term:'Valerian', back:'Scientific: Valeriana officinalis\nUse: sleep disorders\nKey point: can cause drowsiness'},
+  {term:'Vitex Berry', back:'Scientific: Chasteberry\nUse: PMS\nKey point: may take weeks to work'},
+  {term:'Evening Primrose', back:'Scientific: Evening primrose\nUse: PMS symptoms\nKey point: avoid before surgery'},
+  {term:'Libifem', back:'Use: vaginal dryness\nKey point: external use only'},
+  {term:'Menoflavon', back:'Scientific: Red clover\nUse: menopause\nKey point: isoflavones'},
+  {term:'Mastrelle Meno', back:'Scientific: Black cohosh\nUse: menopause symptoms\nKey point: may need several weeks'},
+  {term:'Cranberry Complex', back:'Use: UTI prevention\nKey point: increase water intake'},
+  {term:'Saw Palmetto', back:'Use: BPH\nKey point: may take weeks for benefit'},
+  {term:'Prostamin', back:'Use: BPH\nKey point: consult if urinary symptoms worsen'},
+  {term:'Bioprost', back:'Use: BPH\nKey point: monitor urinary symptoms'},
+  {term:'Inorin', back:'Use: UTI prevention\nKey point: dissolve in water'},
+  {term:'Helix', back:'Scientific: Hedera helix\nUse: productive cough\nKey point: usually syrup'},
+  {term:'Bronchicum Elixir', back:'Scientific: Thymus vulgaris\nUse: acute bronchitis\nKey point: avoid if allergic to thyme'},
+  {term:'Pana Natural', back:'Scientific: Althaea officinalis\nUse: productive cough\nKey point: shake before use'},
+  {term:'Pelargos', back:'Scientific: Pelargonium sidoides\nUse: acute bronchitis\nKey point: shake well before use'},
+  {term:'Gold Thyme', back:'Scientific: Thymus vulgaris\nUse: productive cough\nKey point: avoid if allergic to thyme'},
+  {term:'Carb-X', back:'Scientific: White kidney bean extract\nUse: weight loss\nKey point: take before carb-rich meals'},
+  {term:'Green Coffee', back:'Scientific: Green coffee bean\nUse: weight management\nKey point: may increase caffeine effects'},
+  {term:'GinTura Slim', back:'Ingredients: ginger + turmeric + cinnamon\nUse: weight loss support\nKey point: avoid with anticoagulants'},
+  {term:'Apple Cider Vinegar', back:'Use: weight loss support\nKey point: avoid overuse; may irritate stomach'},
+  {term:'Garcinia Cambogia', back:'Use: weight loss support\nKey point: stop if jaundice occurs'},
+];
+let i = 0, flipped = false;
+const card = document.getElementById('card');
+const frontTerm = document.getElementById('frontTerm');
+const backText = document.getElementById('backText');
+const count1 = document.getElementById('count1');
+const count2 = document.getElementById('count2');
+const bar = document.getElementById('bar');
+const deckList = document.getElementById('deckList');
+function render(){
+  const c = cards[i];
+  frontTerm.textContent = c.term;
+  backText.textContent = c.back;
+  count1.textContent = `${i+1} / ${cards.length}`;
+  count2.textContent = `${i+1} / ${cards.length}`;
+  bar.style.width = `${((i+1)/cards.length)*100}%`;
+  card.classList.toggle('flipped', flipped);
+  deckList.innerHTML = cards.map((x,idx)=>`<div class='item'><b>${idx+1}. ${x.term}</b><span class='small'>${x.back.replace(/\n/g,' • ')}</span></div>`).join('');
+}
+document.getElementById('flip').onclick = () => { flipped = !flipped; render(); };
+document.getElementById('next').onclick = () => { i = (i+1)%cards.length; flipped = false; render(); };
+document.getElementById('prev').onclick = () => { i = (i-1+cards.length)%cards.length; flipped = false; render(); };
+card.onclick = () => { flipped = !flipped; render(); };
+document.getElementById('fontSize').oninput = e => { document.getElementById('backText').style.fontSize = e.target.value + 'px'; };
+document.addEventListener('keydown', e => { if(e.key==='ArrowRight') document.getElementById('next').click(); if(e.key==='ArrowLeft') document.getElementById('prev').click(); if(e.key===' ') { e.preventDefault(); document.getElementById('flip').click(); } });
+render();
+</script>
+</body>
+</html>'''
+Path('output').mkdir(exist_ok=True)
+Path('output/phyto_flashcards.html').write_text(html, encoding='utf-8')
+print('saved')
